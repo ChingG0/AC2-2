@@ -2,9 +2,7 @@
 const BASE_URL = "https://movie-list.alphacamp.io";
 const INDEX_URL = BASE_URL + "/api/v1/movies/";
 const POSTER_URL = BASE_URL + "/posters/";
-
 const movies = JSON.parse(localStorage.getItem("favoriteMovies"));
-
 //監聽頁面
 const dataPanel = document.querySelector("#data-panel");
 const searchForm = document.querySelector("#search-form");
@@ -32,9 +30,9 @@ function renderMovieList(data) {
                 item.id
               }">more
               </button>
-              <button class="btn btn-info btn-add-favorite" data-id="${
+              <button class="btn btn-danger btn-remove-favorite" data-id="${
                 item.id
-              }">+</button>
+              }">X</button>
             </div>
           </div>
         </div>
@@ -61,4 +59,36 @@ function showMovieModal(id) {
   });
 }
 
+//移除function
+/*
+function removeFromFavorite(id) {
+  const movieIndex = movies.findIndex((movie) => movie.id === id);
+  movies.splice(movieIndex, 1);
+  localStorage.setItem("favoriteMovies", JSON.stringify(movies));
+  renderMovieList(movies);
+}
+*/
+function removeFromFavorite(id) {
+  if (!movies || !movies.length) return //防止 movies 是空陣列的狀況
+
+  const movieIndex = movies.findIndex((movie) => movie.id === id)
+  if(movieIndex === -1) return
+
+  movies.splice(movieIndex,1)
+  localStorage.setItem('favoriteMovies', JSON.stringify(movies))
+  renderMovieList(movies)
+}
+
+
+//More/加到最愛 按鈕
+function onPanelClicked(event) {
+  if (event.target.matches(".btn-show-movie")) {
+    showMovieModal(Number(event.target.dataset.id));
+  } else if (event.target.matches(".btn-remove-favorite")) {
+    removeFromFavorite(Number(event.target.dataset.id));
+  }
+}
+
 renderMovieList(movies);
+//監聽按鈕
+dataPanel.addEventListener("click", onPanelClicked);
