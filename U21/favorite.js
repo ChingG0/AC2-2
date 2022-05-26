@@ -60,14 +60,6 @@ function showMovieModal(id) {
 }
 
 //移除function
-/*
-function removeFromFavorite(id) {
-  const movieIndex = movies.findIndex((movie) => movie.id === id);
-  movies.splice(movieIndex, 1);
-  localStorage.setItem("favoriteMovies", JSON.stringify(movies));
-  renderMovieList(movies);
-}
-*/
 function removeFromFavorite(id) {
   if (!movies || !movies.length) return //防止 movies 是空陣列的狀況
 
@@ -79,12 +71,11 @@ function removeFromFavorite(id) {
   renderMovieList(movies)
 }
 
-
 //More/加到最愛 按鈕
 function onPanelClicked(event) {
   if (event.target.matches(".btn-show-movie")) {
     showMovieModal(Number(event.target.dataset.id));
-  } else if (event.target.matches(".btn-remove-favorite")) {
+  }else if (event.target.matches(".btn-remove-favorite")) {
     removeFromFavorite(Number(event.target.dataset.id));
   }
 }
