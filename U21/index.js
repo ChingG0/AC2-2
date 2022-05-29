@@ -5,16 +5,19 @@ const POSTER_URL = BASE_URL + "/posters/";
 const MOVIES_PER_PAGE = 12;
 const movies = [];
 let filteredMovies = [];
+let cardMode = true
 
 //監聽頁面
 const dataPanel = document.querySelector("#data-panel");
 const searchForm = document.querySelector("#search-form");
 const searchInput = document.querySelector("#search-input");
 const paginator = document.querySelector("#paginator");
+const changeMode = document.querySelector('#change-mode')
 
 //放入電影資料
 function renderMovieList(data) {
-  let rawHTML = "";
+  if(cardMode === true){
+    let rawHTML = "";
   //processing
   data.forEach((item) => {
     //title, img
@@ -43,8 +46,24 @@ function renderMovieList(data) {
       </div>`;
   });
   dataPanel.innerHTML = rawHTML;
+  }else if(cardMode === false){
+    let rawHTML = `<ul class="list-group col-sm-12 mb-2">`
+    data.forEach((item) => {
+      // title, image, id
+      rawHTML += `
+      <li class="list-group-item d-flex justify-content-between">
+        <h5 class="card-title">${item.title}</h5>
+        <div>
+          <button class="btn btn-primary btn-show-movie" data-toggle="modal" data-target="#movie-modal"
+            data-id="${item.id}">More</button>
+          <button class="btn btn-info btn-add-favorite" data-id="${item.id}">+</button>
+        </div>
+      </li>`
+    })
+    rawHTML += `</ul>`
+    dataPanel.innerHTML = rawHTML
+  }
 }
-
 //處理分頁數量
 function renderPaginator(amount) {
   const numberOfPage = Math.ceil(amount / MOVIES_PER_PAGE);
@@ -136,6 +155,17 @@ function onSearchFormSubmitted(event) {
   renderMovieList(getMoviesByPages(1));
 }
 
+//cardMode跟listMode 按鈕
+function onChangeModeClicked(event){
+  if (event.target.matches("#card-mode-button")) {
+    cardMode = true
+    renderMovieList(getMoviesByPages(1))
+  } else if (event.target.matches("#list-mode-button")) {
+    cardMode = false
+    renderMovieList(getMoviesByPages(1))
+  }
+}
+
 //api資料,放到renderMovieList
 axios.get(INDEX_URL).then((res) => {
   //for(const movie of res.data.results){
@@ -146,7 +176,10 @@ axios.get(INDEX_URL).then((res) => {
   renderMovieList(getMoviesByPages(1));
 });
 
+
 //監聽按鈕
 dataPanel.addEventListener("click", onPanelClicked);
 searchForm.addEventListener("submit", onSearchFormSubmitted);
 paginator.addEventListener('click', onPaginatorClicked)
+changeMode.addEventListener('click',onChangeModeClicked)
+
