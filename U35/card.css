@@ -34,3 +34,6 @@ html, body{
     background: linear-gradient(45deg,#E67E22 , #F39C12);
     background-size: cover;
 }
+.paired{
+    background-color: #dae0e3;
+}

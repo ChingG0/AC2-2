@@ -1,3 +1,11 @@
+const GAME_STATE = {
+  FirstCardAwaits: "FirstCardAwaits",
+  SecondCardAwaits: "SecondCardAwaits",
+  CardMatchFailed: "CardMatchFailed",
+  CardMatched: "CardMatched",
+  GameFinished: "GameFinished",
+};
+
 const Symbols = [
   "https://assets-lighthouse.alphacamp.co/uploads/image/file/17989/__.png", // �®�
   "https://cdn0.iconfinder.com/data/icons/small-n-flat/24/678087-heart-512.png", // �R��
@@ -35,10 +43,9 @@ const view = {
     return `<div data-index = '${index}' class="card back"></div>`;
   },
 
-  displayCards() {
+  displayCards(indexes) {
     const rootElement = document.querySelector("#cards");
-    rootElement.innerHTML = utility
-      .getRandomNumberArray(52)
+    rootElement.innerHTML = indexes
       .map((index) => this.getCardElement(index))
       .join("");
   },
@@ -51,6 +58,10 @@ const view = {
     }
     card.classList.add("back");
     card.innerHTML = null;
+  },
+
+  pairCard(card) {
+    card.classList.add("paired");
   },
 };
 
@@ -68,10 +79,64 @@ const utility = {
   },
 };
 
-view.displayCards();
+const model = {
+  revealedCards: [],
+
+  isRevealCardsMatched() {
+    return (
+      this.revealedCards[0].dataset.index % 13 ===
+      this.revealedCards[1].dataset.index % 13
+    );
+  },
+};
+
+const controller = {
+  currentState: GAME_STATE.FirstCardAwaits,
+
+  generateCards() {
+    view.displayCards(utility.getRandomNumberArray(52));
+  },
+
+  dispatchCardAction(card) {
+    if (!card.classList.contains("back")) {
+      return;
+    }
+    switch (this.currentState) {
+      case GAME_STATE.FirstCardAwaits:
+        view.flipCard(card);
+        model.revealedCards.push(card);
+        this.currentState = GAME_STATE.SecondCardAwaits;
+        break;
+
+      case GAME_STATE.SecondCardAwaits:
+        view.flipCard(card);
+        model.revealedCards.push(card);
+        if (model.isRevealCardsMatched()) {
+          //Matched
+          this.currentState = GAME_STATE.CardMatched;
+          view.pairCard(model.revealedCards[0]);
+          view.pairCard(model.revealedCards[1]);
+          model.revealedCards = []
+          this.currentState = GAME_STATE.FirstCardAwaits;
+        } else {
+          //Failed
+          this.currentState = GAME_STATE.CardMatchFailed;
+          setTimeout(() => {
+            view.flipCard(model.revealedCards[0])
+            view.flipCard(model.revealedCards[1])
+            model.revealedCards = []
+            this.currentState = GAME_STATE.FirstCardAwaits
+          }, 500);
+        }
+    }
+    console.log(this.currentState);
+  },
+};
+
+controller.generateCards();
 
 document.querySelectorAll(".card").forEach((card) => {
   card.addEventListener("click", (event) => {
-    view.flipCard(card);
+    controller.dispatchCardAction(card);
   });
 });
