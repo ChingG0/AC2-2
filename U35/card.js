@@ -50,19 +50,58 @@ const view = {
       .join("");
   },
 
-  flipCard(card) {
-    if (card.classList.contains("back")) {
-      card.classList.remove("back");
-      card.innerHTML = this.getCardContent(Number(card.dataset.index));
-      return;
-    }
-    card.classList.add("back");
-    card.innerHTML = null;
+  //flipCards(1,2,3,4,5)
+  flipCards(...cards) {
+    cards.map((card) => {
+      if (card.classList.contains("back")) {
+        card.classList.remove("back");
+        card.innerHTML = this.getCardContent(Number(card.dataset.index));
+        return;
+      }
+      card.classList.add("back");
+      card.innerHTML = null;
+    });
   },
 
-  pairCard(card) {
-    card.classList.add("paired");
+  pairCards(...cards) {
+    cards.map((card) => {
+      card.classList.add("paired");
+    });
   },
+
+  renderScore(score) {
+    document.querySelector(".score").textContent = `Score: ${score}`;
+  },
+  renderTriedTimes(times) {
+    document.querySelector(
+      ".tried"
+    ).textContent = `You've tried: ${times} times`;
+  },
+  appendWrongAnimation(...cards) {
+    cards.map((card) => {
+      card.classList.add("wrong");
+      card.addEventListener(
+        "animationend",
+        (e) => {
+          card.classList.remove("wrong");
+        },
+        {
+          once: true,
+        }
+      );
+    });
+  },
+  showGameFinished () {
+    const div = document.createElement('div')
+    div.classList.add('completed')
+    div.innerHTML = `
+      <p>Complete!</p>
+      <p>Score: ${model.score}</p>
+      <p>You've tried: ${model.triedTimes} times</p>
+    `
+    const header = document.querySelector('#header')
+    header.before(div)
+  }
 };
 
 const utility = {
@@ -88,6 +127,10 @@ const model = {
       this.revealedCards[1].dataset.index % 13
     );
   },
+
+  score: 0,
+
+  triedTimes: 0,
 };
 
 const controller = {
@@ -103,33 +146,42 @@ const controller = {
     }
     switch (this.currentState) {
       case GAME_STATE.FirstCardAwaits:
-        view.flipCard(card);
+        view.flipCards(card);
         model.revealedCards.push(card);
         this.currentState = GAME_STATE.SecondCardAwaits;
         break;
 
       case GAME_STATE.SecondCardAwaits:
-        view.flipCard(card);
+        view.flipCards(card);
         model.revealedCards.push(card);
+        view.renderTriedTimes((model.triedTimes += 1));
         if (model.isRevealCardsMatched()) {
           //Matched
+          view.renderScore((model.score += 10));
           this.currentState = GAME_STATE.CardMatched;
-          view.pairCard(model.revealedCards[0]);
-          view.pairCard(model.revealedCards[1]);
-          model.revealedCards = []
+          view.pairCards(...model.revealedCards);
+          model.revealedCards = [];
+          if (model.score === 260) {
+            console.log('showGameFinished')
+            this.currentState = GAME_STATE.GameFinished
+            view.showGameFinished()  // 加在這裡
+            return
+          }
           this.currentState = GAME_STATE.FirstCardAwaits;
         } else {
           //Failed
+          view.appendWrongAnimation(...model.revealedCards)
           this.currentState = GAME_STATE.CardMatchFailed;
-          setTimeout(() => {
-            view.flipCard(model.revealedCards[0])
-            view.flipCard(model.revealedCards[1])
-            model.revealedCards = []
-            this.currentState = GAME_STATE.FirstCardAwaits
-          }, 500);
+          setTimeout(this.resetCards, 800);
         }
     }
     console.log(this.currentState);
+  },
+
+  resetCards() {
+    view.flipCards(...model.revealedCards);
+    model.revealedCards = [];
+    controller.currentState = GAME_STATE.FirstCardAwaits;
   },
 };
 
