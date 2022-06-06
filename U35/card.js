@@ -175,7 +175,6 @@ const controller = {
           setTimeout(this.resetCards, 800);
         }
     }
-    console.log(this.currentState);
   },
 
   resetCards() {
